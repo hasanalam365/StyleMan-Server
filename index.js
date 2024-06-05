@@ -33,6 +33,7 @@ async function run() {
         const districtsCollection = client.db('BloodDonate').collection('Districts')
         const upazilasCollection = client.db('BloodDonate').collection('Upazilas')
         const donationRequestCollection = client.db('BloodDonate').collection('donationRequest')
+        const testimonialsCollection = client.db('BloodDonate').collection('Testimonials')
 
         app.get('/users', async (req, res) => {
             const result = await usersCollection.find().toArray()
@@ -163,6 +164,11 @@ async function run() {
             res.send(result)
         })
 
+        //testimonial api
+        app.get('/testimonials', async (req, res) => {
+            const result = await testimonialsCollection.find().toArray()
+            res.send(result)
+        })
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
