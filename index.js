@@ -101,11 +101,36 @@ async function run() {
             const result = await donationRequestCollection.find().toArray()
             res.send(result)
         })
+
         app.get('/updated-donation-request/:id', async (req, res) => {
             const id = req.params.id;
 
             const query = { _id: new ObjectId(id) }
             const result = await donationRequestCollection.findOne(query)
+            res.send(result)
+        })
+        app.patch('/updated-donation-request/:id', async (req, res) => {
+            const updatedinfo = req.body;
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) }
+            const updatedDoc = {
+                $set: {
+                    recipientName: updatedinfo.recipientName,
+                    hospitalName: updatedinfo.hospitalName,
+                    bloodGroup: updatedinfo.bloodGroup,
+                    district: updatedinfo.district,
+                    upazila: updatedinfo.upazila,
+                    requestMessage: updatedinfo.requestMessage,
+                    fullAddress: updatedinfo.fullAddress,
+                    donateDate: updatedinfo.donateDate,
+                    donateTime: updatedinfo.donateTime,
+                    requesterName: updatedinfo.requesterName,
+                    requesterEmail: updatedinfo.requesterEmail,
+                    status: updatedinfo.status,
+
+                }
+            }
+            const result = await donationRequestCollection.updateOne(filter, updatedDoc)
             res.send(result)
         })
 
