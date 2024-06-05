@@ -110,11 +110,7 @@ async function run() {
             const result = await donationRequestCollection.find(query).sort({ createdAt: 1 }).limit(3).toArray();
             res.send(result)
         })
-        // app.get('/recentThreeData', async (req, res) => {
 
-        //     const result = await donationRequestCollection.find().sort({ createdAt: -1 }).limit(3).toArray();
-        //     res.send(result)
-        // })
 
         app.get('/updated-donation-request', async (req, res) => {
 
