@@ -89,12 +89,32 @@ async function run() {
 
         // donation request related api
 
+        app.get('/create-donation-request', async (req, res) => {
+
+            const result = await donationRequestCollection.find().toArray()
+            res.send(result)
+        })
+
         app.get('/create-donation-request/:requesterEmail', async (req, res) => {
             const requesterEmail = req.params.requesterEmail;
             const query = { requesterEmail: requesterEmail }
             const result = await donationRequestCollection.find(query).toArray()
             res.send(result)
         })
+
+        //last/recent three data get
+        app.get('/recentThreeData/:email', async (req, res) => {
+            const email = req.params.email
+            const query = { requesterEmail: email }
+
+            const result = await donationRequestCollection.find(query).sort({ createdAt: 1 }).limit(3).toArray();
+            res.send(result)
+        })
+        // app.get('/recentThreeData', async (req, res) => {
+
+        //     const result = await donationRequestCollection.find().sort({ createdAt: -1 }).limit(3).toArray();
+        //     res.send(result)
+        // })
 
         app.get('/updated-donation-request', async (req, res) => {
 
