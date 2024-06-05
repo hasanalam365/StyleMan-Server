@@ -88,6 +88,27 @@ async function run() {
         })
 
         // donation request related api
+
+        app.get('/create-donation-request/:requesterEmail', async (req, res) => {
+            const requesterEmail = req.params.requesterEmail;
+            const query = { requesterEmail: requesterEmail }
+            const result = await donationRequestCollection.find(query).toArray()
+            res.send(result)
+        })
+
+        app.get('/updated-donation-request', async (req, res) => {
+
+            const result = await donationRequestCollection.find().toArray()
+            res.send(result)
+        })
+        app.get('/updated-donation-request/:id', async (req, res) => {
+            const id = req.params.id;
+
+            const query = { _id: new ObjectId(id) }
+            const result = await donationRequestCollection.findOne(query)
+            res.send(result)
+        })
+
         app.post('/create-donation-request', async (req, res) => {
             const donationDetails = req.body;
             const result = await donationRequestCollection.insertOne(donationDetails)
