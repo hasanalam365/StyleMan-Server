@@ -160,10 +160,28 @@ async function run() {
             res.send(result)
         })
 
+
         app.delete('/donation-request-delete/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) }
             const result = await donationRequestCollection.deleteOne(query)
+            res.send(result)
+        })
+
+        //donar agree donate blood
+        app.put('/donarDonateBlood/:id', async (req, res) => {
+            const donarConfirmData = req.body;
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) }
+            const options = { upsert: true }
+            const updatedDoc = {
+                $set: {
+                    bloodDonarName: donarConfirmData.bloodDonarName,
+                    bloodDonarEmail: donarConfirmData.bloodDonarEmail,
+                    status: donarConfirmData.status
+                }
+            }
+            const result = await donationRequestCollection.updateOne(filter, updatedDoc, options)
             res.send(result)
         })
 
