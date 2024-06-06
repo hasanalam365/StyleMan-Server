@@ -119,14 +119,17 @@ async function run() {
             res.send(result)
         })
 
-        app.get('/updated-donation-request/:id', async (req, res) => {
+        app.get('/donation-request/:id', async (req, res) => {
             const id = req.params.id;
 
             const query = { _id: new ObjectId(id) }
             const result = await donationRequestCollection.findOne(query)
             res.send(result)
         })
-        app.patch('/updated-donation-request/:id', async (req, res) => {
+
+
+
+        app.patch('/updated-request/:id', async (req, res) => {
             const updatedinfo = req.body;
             const id = req.params.id;
             const filter = { _id: new ObjectId(id) }
@@ -167,6 +170,19 @@ async function run() {
         //testimonial api
         app.get('/testimonials', async (req, res) => {
             const result = await testimonialsCollection.find().toArray()
+            res.send(result)
+        })
+
+        //search btn
+        app.get('/search', async (req, res) => {
+            const { category } = req.query;
+            console.log('category is', category)
+
+            const query = { status: category }
+            console.log('query is', query)
+
+
+            const result = await donationRequestCollection.find(query).toArray()
             res.send(result)
         })
 
