@@ -54,6 +54,12 @@ async function run() {
             res.send(result)
         })
 
+        // app.get('/admin-stats', async (req, res) => {
+        //     const users = await usersCollection.estimatedDocumentCount()
+        //     res.send(users)
+        // })
+
+
         app.get('/user/:email', async (req, res) => {
             const email = req.params.email
             const query = { email: email }
@@ -61,12 +67,49 @@ async function run() {
             res.send(result)
         })
 
-        app.post('/users', async (req, res) => {
-            const user = req.body;
-            const result = await usersCollection.insertOne(user)
+        app.put('/usercreate/:email', async (req, res) => {
+            const userInfo = req.body;
+            const email = req.params.email
+            const filter = { email: email }
+            const options = { upsert: true }
+            const updatedDoc = {
+                $set: {
+
+                    name: userInfo.name,
+                    email: userInfo.email,
+                    photo: userInfo.photo,
+                    bloodGroup: userInfo.bloodGroup,
+                    district: userInfo.district,
+                    upazila: userInfo.upazila,
+                    status: userInfo.status,
+                    role: userInfo.role
+                }
+            }
+            const result = await usersCollection.updateOne(filter, updatedDoc, options)
             res.send(result)
         })
-
+        // app.post('/users', async (req, res) => {
+        //     const user = req.body;
+        //     const query = { email: user.email }
+        //     const existUser = await usersCollection.findOne(query)
+        //     if (existUser) {
+        //         return res.send({ message: 'user already exist', insertedId: null })
+        //     }
+        //     const result = await usersCollection.insertOne(user)
+        //     res.send(result)
+        // })
+        app.patch('/statusUpdate/:email', async (req, res) => {
+            const user = req.body;
+            const email = req.params.email;
+            const filter = { email: email }
+            const updatedDoc = {
+                $set: {
+                    status: user.updatedStatus
+                }
+            }
+            const result = await usersCollection.updateOne(filter, updatedDoc)
+            res.send(result)
+        })
 
         app.patch('/users/:id', async (req, res) => {
             const updatedinfo = req.body
