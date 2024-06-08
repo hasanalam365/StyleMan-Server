@@ -1,6 +1,7 @@
 const express = require('express');
-const cors = require('cors');
 const app = express();
+const cors = require('cors');
+const jwt = require('jsonwebtoken')
 require('dotenv').config()
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000;
@@ -35,6 +36,14 @@ async function run() {
         const donationRequestCollection = client.db('BloodDonate').collection('donationRequest')
         const testimonialsCollection = client.db('BloodDonate').collection('Testimonials')
 
+        //jwt related api
+        app.post('/jwt', async (req, res) => {
+            const user = req.body //playload eta client site theke ashbe
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
+            res.send({ token })
+        })
+
+        //user related api
         app.get('/users', async (req, res) => {
             const result = await usersCollection.find().toArray()
             res.send(result)
@@ -53,11 +62,6 @@ async function run() {
             const result = await usersCollection.find().toArray()
             res.send(result)
         })
-
-        // app.get('/admin-stats', async (req, res) => {
-        //     const users = await usersCollection.estimatedDocumentCount()
-        //     res.send(users)
-        // })
 
 
         app.get('/user/:email', async (req, res) => {
@@ -98,6 +102,8 @@ async function run() {
         //     const result = await usersCollection.insertOne(user)
         //     res.send(result)
         // })
+
+
         //updated status
         app.patch('/statusUpdate/:email', async (req, res) => {
             const user = req.body;
@@ -113,7 +119,7 @@ async function run() {
         })
 
         //updatd role 
-        app.patch('/updatedRole/:email', async (req, res) => {
+        app.patch('/user/admin/:email', async (req, res) => {
             const user = req.body;
             const email = req.params.email;
             const filter = { email: email }
