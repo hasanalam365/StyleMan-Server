@@ -83,7 +83,7 @@ async function run() {
         })
 
         //user related api
-        app.get('/users', verifyToken, verifyAdmin, async (req, res) => {
+        app.get('/users', verifyToken, async (req, res) => {
             const result = await usersCollection.find().toArray()
             res.send(result)
         })
@@ -132,7 +132,7 @@ async function run() {
 
                     name: userInfo.name,
                     email: userInfo.email,
-                    photo: userInfo.photo,
+                    photoURL: userInfo.photoURL,
                     bloodGroup: userInfo.bloodGroup,
                     district: userInfo.district,
                     upazila: userInfo.upazila,
