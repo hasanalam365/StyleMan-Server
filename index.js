@@ -25,6 +25,22 @@ const client = new MongoClient(uri, {
     }
 });
 
+
+//middlewares
+const verifyToken = async (req, res, next) => {
+    console.log('inside verify token', req.headers)
+
+    if (!req.headers.authorization) {
+        return res.status(401).send({ message: 'forbidded access' })
+    }
+    const token = req.headers.authorization.split(' ')[1]
+
+
+
+    next()
+}
+
+
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
@@ -44,7 +60,8 @@ async function run() {
         })
 
         //user related api
-        app.get('/users', async (req, res) => {
+        app.get('/users', verifyToken, async (req, res) => {
+            console.log(req.headers)
             const result = await usersCollection.find().toArray()
             res.send(result)
         })
