@@ -28,16 +28,21 @@ const client = new MongoClient(uri, {
 
 //middlewares
 const verifyToken = async (req, res, next) => {
-    console.log('inside verify token', req.headers)
+    console.log('inside verify token', req.headers.authorization)
 
     if (!req.headers.authorization) {
         return res.status(401).send({ message: 'forbidded access' })
     }
     const token = req.headers.authorization.split(' ')[1]
 
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+        if (err) {
+            return res.status(401).send({ message: 'forbidded access' })
+        }
+        req.decoded = decoded;
+        next()
+    })
 
-
-    next()
 }
 
 
