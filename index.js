@@ -98,6 +98,7 @@ async function run() {
         //     const result = await usersCollection.insertOne(user)
         //     res.send(result)
         // })
+        //updated status
         app.patch('/statusUpdate/:email', async (req, res) => {
             const user = req.body;
             const email = req.params.email;
@@ -111,15 +112,29 @@ async function run() {
             res.send(result)
         })
 
-        app.patch('/users/:id', async (req, res) => {
+        //updatd role 
+        app.patch('/updatedRole/:email', async (req, res) => {
+            const user = req.body;
+            const email = req.params.email;
+            const filter = { email: email }
+            const updatedDoc = {
+                $set: {
+                    role: user.updatedRole
+                }
+            }
+            const result = await usersCollection.updateOne(filter, updatedDoc)
+            res.send(result)
+        })
+
+        //updated profile
+        app.patch('/updateProfile/:email', async (req, res) => {
             const updatedinfo = req.body
-            const id = req.params.id
-            const filter = { _id: new ObjectId(id) }
+            const email = req.params.email
+            const filter = { email: email }
 
             const updatedDoc = {
                 $set: {
                     name: updatedinfo.name,
-                    email: updatedinfo.email,
                     bloodGroup: updatedinfo.bloodGroup,
                     district: updatedinfo.district,
                     upazila: updatedinfo.upazila,
@@ -236,10 +251,10 @@ async function run() {
 
         //search btn
         app.get('/search', async (req, res) => {
-            const { category } = req.query;
+            const category = req.query;
             console.log('category is', category)
 
-            const query = { status: category }
+            const query = { status: category.category }
             console.log('query is', query)
 
 
