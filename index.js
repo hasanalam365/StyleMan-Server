@@ -31,19 +31,21 @@ const verifyToken = async (req, res, next) => {
     console.log('inside verify token', req.headers.authorization)
 
     if (!req.headers.authorization) {
-        return res.status(401).send({ message: 'forbidded access' })
+        return res.status(401).send({ message: 'unauthorized access' })
     }
     const token = req.headers.authorization.split(' ')[1]
 
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
         if (err) {
-            return res.status(401).send({ message: 'forbidded access' })
+            return res.status(401).send({ message: 'unauthorized access' })
         }
         req.decoded = decoded;
+
         next()
     })
 
 }
+
 
 
 async function run() {
@@ -57,6 +59,22 @@ async function run() {
         const donationRequestCollection = client.db('BloodDonate').collection('donationRequest')
         const testimonialsCollection = client.db('BloodDonate').collection('Testimonials')
 
+
+        //verify admin
+
+        //use verify admin after verify token
+        const verifyAdmin = async (req, res, next) => {
+            const email = req.decoded.email
+            const query = { email: email }
+            const user = await usersCollection.findOne(query)
+
+            const isAdmin = user?.role === 'admin'
+            if (!isAdmin) {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
+            next()
+        }
+
         //jwt related api
         app.post('/jwt', async (req, res) => {
             const user = req.body //playload eta client site theke ashbe
@@ -65,10 +83,25 @@ async function run() {
         })
 
         //user related api
-        app.get('/users', verifyToken, async (req, res) => {
-            console.log(req.headers)
+        app.get('/users', verifyToken, verifyAdmin, async (req, res) => {
             const result = await usersCollection.find().toArray()
             res.send(result)
+        })
+
+        //check admin role
+        app.get('/users/admin/:email', verifyToken, async (req, res) => {
+            const email = req.params.email
+            if (email !== req.decoded.email) {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
+            const query = { email: email }
+            const user = await usersCollection.findOne(query)
+
+            let admin = false
+            if (user) {
+                admin = user?.role === 'admin'
+            }
+            res.send({ admin })
         })
 
         app.get('/districts', async (req, res) => {
@@ -80,10 +113,6 @@ async function run() {
             res.send(result)
         })
 
-        app.get('/users', async (req, res) => {
-            const result = await usersCollection.find().toArray()
-            res.send(result)
-        })
 
 
         app.get('/user/:email', async (req, res) => {
@@ -114,19 +143,7 @@ async function run() {
             const result = await usersCollection.updateOne(filter, updatedDoc, options)
             res.send(result)
         })
-        // app.post('/users', async (req, res) => {
-        //     const user = req.body;
-        //     const query = { email: user.email }
-        //     const existUser = await usersCollection.findOne(query)
-        //     if (existUser) {
-        //         return res.send({ message: 'user already exist', insertedId: null })
-        //     }
-        //     const result = await usersCollection.insertOne(user)
-        //     res.send(result)
-        // })
 
-
-        //updated status
         app.patch('/statusUpdate/:email', async (req, res) => {
             const user = req.body;
             const email = req.params.email;
@@ -141,7 +158,7 @@ async function run() {
         })
 
         //updatd role 
-        app.patch('/user/admin/:email', async (req, res) => {
+        app.patch('/user/admin/:email', verifyToken, async (req, res) => {
             const user = req.body;
             const email = req.params.email;
             const filter = { email: email }
