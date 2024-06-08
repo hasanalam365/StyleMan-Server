@@ -243,6 +243,22 @@ async function run() {
             res.send(result)
         })
 
+        //status done when status is inprogress
+        app.patch('/changeStatus/:id', async (req, res) => {
+            const updatedStatus = req.body
+            console.log(updatedStatus)
+            const id = req.params.id
+            const filter = { _id: new ObjectId(id) }
+
+            const updatedDoc = {
+                $set: {
+                    status: updatedStatus.status
+                }
+            }
+            const result = await donationRequestCollection.updateOne(filter, updatedDoc)
+            res.send(result)
+        })
+
         //testimonial api
         app.get('/testimonials', async (req, res) => {
             const result = await testimonialsCollection.find().toArray()
