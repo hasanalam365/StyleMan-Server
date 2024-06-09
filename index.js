@@ -28,7 +28,7 @@ const client = new MongoClient(uri, {
 
 //middlewares
 const verifyToken = async (req, res, next) => {
-    console.log('inside verify token', req.headers.authorization)
+    // console.log('inside verify token', req.headers.authorization)
 
     if (!req.headers.authorization) {
         return res.status(401).send({ message: 'unauthorized access' })
@@ -144,7 +144,7 @@ async function run() {
             res.send(result)
         })
 
-        app.patch('/statusUpdate/:email', async (req, res) => {
+        app.patch('/statusUpdate/admin/:email', async (req, res) => {
             const user = req.body;
             const email = req.params.email;
             const filter = { email: email }
@@ -158,9 +158,11 @@ async function run() {
         })
 
         //updatd role 
-        app.patch('/user/admin/:email', verifyToken, async (req, res) => {
+        app.patch('/user/role/admin/:email', async (req, res) => {
             const user = req.body;
+            console.log(user.updatedRole)
             const email = req.params.email;
+            console.log(email)
             const filter = { email: email }
             const updatedDoc = {
                 $set: {
@@ -197,9 +199,16 @@ async function run() {
 
         app.get('/create-donation-request', async (req, res) => {
 
+            // const filter = req.query.filter
+            // let query = {}
+            // console.log('query is:', query, 'filter is:', filter)
+            // if (filter) query = { category: filter }
+
+            // console.log('query is:', query, 'filter is:', filter)
             const result = await donationRequestCollection.find().toArray()
             res.send(result)
         })
+
 
         app.get('/create-donation-request/:requesterEmail', async (req, res) => {
             const requesterEmail = req.params.requesterEmail;
@@ -313,15 +322,21 @@ async function run() {
         })
 
         //search btn
-        app.get('/search', async (req, res) => {
+        app.get('/filter-all-donations', async (req, res) => {
             const category = req.query;
-            console.log('category is', category)
 
             const query = { status: category.category }
-            console.log('query is', query)
+
+            if (category.category === '') {
+                const result = await donationRequestCollection.find().toArray()
+
+                return res.send(result)
+            }
 
 
             const result = await donationRequestCollection.find(query).toArray()
+
+
             res.send(result)
         })
 
