@@ -122,6 +122,22 @@ async function run() {
             res.send(result)
         })
 
+        //search all users filter
+        app.get('/users/admin-allUsers', async (req, res) => {
+
+            const category = req.query;
+            const query = { status: category.category }
+            console.log(category)
+            if (category.category === '') {
+                const result = await usersCollection.find().toArray()
+                return res.send(result)
+            }
+            const result = await usersCollection.find(query).toArray()
+            res.send(result)
+
+        })
+
+
         app.put('/usercreate/:email', async (req, res) => {
             const userInfo = req.body;
             const email = req.params.email
@@ -204,17 +220,7 @@ async function run() {
             res.send(result)
         })
 
-        //search btn
-        //  app.get('/filter-all-donations', async (req, res) => {
-        //     const category = req.query;
-        //     const query = { status: category.category }
-        //     if (category.category === '') {
-        //         const result = await donationRequestCollection.find().toArray()
-        //         return res.send(result)
-        //     }
-        //     const result = await donationRequestCollection.find(query).toArray()
-        //     res.send(result)
-        // })
+
 
         app.get('/create-donation-request/:requesterEmail', async (req, res) => {
             const requesterEmail = req.params.requesterEmail;
@@ -336,7 +342,7 @@ async function run() {
             res.send(result)
         })
 
-        //search btn
+        //search all donation filter
         app.get('/filter-all-donations', async (req, res) => {
             const category = req.query;
             const query = { status: category.category }
