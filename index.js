@@ -199,20 +199,35 @@ async function run() {
 
         app.get('/create-donation-request', async (req, res) => {
 
-            // const filter = req.query.filter
-            // let query = {}
-            // console.log('query is:', query, 'filter is:', filter)
-            // if (filter) query = { category: filter }
 
-            // console.log('query is:', query, 'filter is:', filter)
             const result = await donationRequestCollection.find().toArray()
             res.send(result)
         })
 
+        //search btn
+        //  app.get('/filter-all-donations', async (req, res) => {
+        //     const category = req.query;
+        //     const query = { status: category.category }
+        //     if (category.category === '') {
+        //         const result = await donationRequestCollection.find().toArray()
+        //         return res.send(result)
+        //     }
+        //     const result = await donationRequestCollection.find(query).toArray()
+        //     res.send(result)
+        // })
 
         app.get('/create-donation-request/:requesterEmail', async (req, res) => {
             const requesterEmail = req.params.requesterEmail;
-            const query = { requesterEmail: requesterEmail }
+            const category = req.query;
+            const query = { requesterEmail: requesterEmail, status: category.category }
+
+
+            if (category.category === '') {
+                query2 = { requesterEmail: requesterEmail }
+                const result = await donationRequestCollection.find(query2).toArray()
+                return res.send(result)
+            }
+
             const result = await donationRequestCollection.find(query).toArray()
             res.send(result)
         })
@@ -324,19 +339,12 @@ async function run() {
         //search btn
         app.get('/filter-all-donations', async (req, res) => {
             const category = req.query;
-
             const query = { status: category.category }
-
             if (category.category === '') {
                 const result = await donationRequestCollection.find().toArray()
-
                 return res.send(result)
             }
-
-
             const result = await donationRequestCollection.find(query).toArray()
-
-
             res.send(result)
         })
 
