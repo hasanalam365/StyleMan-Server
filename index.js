@@ -51,7 +51,7 @@ const verifyToken = async (req, res, next) => {
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
-        await client.connect();
+        // await client.connect();
 
         const usersCollection = client.db('BloodDonate').collection('users')
         const districtsCollection = client.db('BloodDonate').collection('Districts')
@@ -226,7 +226,7 @@ async function run() {
             const requesterEmail = req.params.requesterEmail;
             const category = req.query;
             const query = { requesterEmail: requesterEmail, status: category.category }
-
+            console.log(query)
 
             if (category.category === '') {
                 query2 = { requesterEmail: requesterEmail }
@@ -346,6 +346,7 @@ async function run() {
         app.get('/filter-all-donations', async (req, res) => {
             const category = req.query;
             const query = { status: category.category }
+
             if (category.category === '') {
                 const result = await donationRequestCollection.find().toArray()
                 return res.send(result)
@@ -354,8 +355,24 @@ async function run() {
             res.send(result)
         })
 
+        //search all blood donation filter search
+        app.get('/search-blood-donation-all', async (req, res) => {
+
+
+            const category = req.query;
+
+
+            const query = { bloodGroup: category.bloodGroup, district: category.district, upazila: category.upazila }
+
+
+
+
+            const result = await usersCollection.find(query).toArray()
+            res.send(result)
+        })
+
         // Send a ping to confirm a successful connection
-        await client.db("admin").command({ ping: 1 });
+        // await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
         // Ensures that the client will close when you finish/error
