@@ -6,12 +6,26 @@ require('dotenv').config()
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000;
 
+// const corsOptions = {
+//     origin: 'http://localhost:5173', // Your frontend URL
+//     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', // Allowed methods
+//     credentials: true, // Allow cookies to be sent with the request
+//     optionsSuccessStatus: 200 // Some legacy browsers choke on 204
+// };
+
 //middleware
 app.use(express.json())
-app.use(cors())
+// app.use(cors(corsOptions))
+app.use(cors({
+    origin: ['http://localhost:5173', 'https://reddrop-bd.web.app']
+}))
 
 
-
+// const corsOptions = {
+//     httpOnly: true,
+//     secure: process.env.NODE_ENV === "production" ? true : false,
+//     sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+// };
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.qvnsypp.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -74,6 +88,18 @@ async function run() {
             }
             next()
         }
+        //use verify admin after verify token
+        const verifyAdminAndVolunteer = async (req, res, next) => {
+            const email = req.decoded.email
+            const query = { email: email }
+            const user = await usersCollection.findOne(query)
+
+            const isAdminOrVolun = user?.role === 'admin' || user?.role === 'volunteer'
+            if (!isAdminOrVolun) {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
+            next()
+        }
 
         //jwt related api
         app.post('/jwt', async (req, res) => {
@@ -103,6 +129,21 @@ async function run() {
             }
             res.send({ admin })
         })
+        //check admin and volunteer role
+        app.get('/users/adminorVolun/:email', verifyToken, async (req, res) => {
+            const email = req.params.email
+            if (email !== req.decoded.email) {
+                return res.status(403).send({ message: 'forbidden access' })
+            }
+            const query = { email: email }
+            const user = await usersCollection.findOne(query)
+
+            let adminOrVolun = false
+            if (user) {
+                adminOrVolun = user?.role === 'admin' || user?.role === 'volunteer'
+            }
+            res.send({ adminOrVolun })
+        })
 
         app.get('/districts', async (req, res) => {
             const result = await districtsCollection.find().toArray()
@@ -127,7 +168,7 @@ async function run() {
 
             const category = req.query;
             const query = { status: category.category }
-            console.log(category)
+
             if (category.category === '') {
                 const result = await usersCollection.find().toArray()
                 return res.send(result)
@@ -136,6 +177,20 @@ async function run() {
             res.send(result)
 
         })
+
+        //search all donation filter
+        app.get('/filter-all-donations', async (req, res) => {
+            const category = req.query;
+            const query = { status: category.category }
+
+            if (category.category === '') {
+                const result = await donationRequestCollection.find().toArray()
+                return res.send(result)
+            }
+            const result = await donationRequestCollection.find(query).toArray()
+            res.send(result)
+        })
+
 
 
         app.put('/usercreate/:email', async (req, res) => {
@@ -176,7 +231,7 @@ async function run() {
         //updatd role 
         app.patch('/user/role/admin/:email', async (req, res) => {
             const user = req.body;
-            console.log(user.updatedRole)
+            console.log(user)
             const email = req.params.email;
             console.log(email)
             const filter = { email: email }
@@ -194,6 +249,7 @@ async function run() {
         //updated profile
         app.patch('/updateProfile/:email', async (req, res) => {
             const updatedinfo = req.body
+            console.log(updatedinfo)
             const email = req.params.email
             const filter = { email: email }
 
@@ -221,7 +277,7 @@ async function run() {
         })
 
 
-
+        //my
         app.get('/create-donation-request/:requesterEmail', async (req, res) => {
             const requesterEmail = req.params.requesterEmail;
             const category = req.query;
@@ -256,7 +312,6 @@ async function run() {
 
         app.get('/donation-request/:id', async (req, res) => {
             const id = req.params.id;
-
             const query = { _id: new ObjectId(id) }
             const result = await donationRequestCollection.findOne(query)
             res.send(result)
@@ -342,18 +397,6 @@ async function run() {
             res.send(result)
         })
 
-        //search all donation filter
-        app.get('/filter-all-donations', async (req, res) => {
-            const category = req.query;
-            const query = { status: category.category }
-
-            if (category.category === '') {
-                const result = await donationRequestCollection.find().toArray()
-                return res.send(result)
-            }
-            const result = await donationRequestCollection.find(query).toArray()
-            res.send(result)
-        })
 
         //search all blood donation filter search
         app.get('/search-blood-donation-all', async (req, res) => {
