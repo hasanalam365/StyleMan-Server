@@ -3,15 +3,11 @@ const app = express();
 const cors = require('cors');
 const jwt = require('jsonwebtoken')
 require('dotenv').config()
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+
 const port = process.env.PORT || 5000;
 
-// const corsOptions = {
-//     origin: 'http://localhost:5173', // Your frontend URL
-//     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', // Allowed methods
-//     credentials: true, // Allow cookies to be sent with the request
-//     optionsSuccessStatus: 200 // Some legacy browsers choke on 204
-// };
 
 //middleware
 app.use(express.json())
@@ -21,11 +17,6 @@ app.use(cors({
 }))
 
 
-// const corsOptions = {
-//     httpOnly: true,
-//     secure: process.env.NODE_ENV === "production" ? true : false,
-//     sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
-// };
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.qvnsypp.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -72,6 +63,7 @@ async function run() {
         const upazilasCollection = client.db('BloodDonate').collection('Upazilas')
         const donationRequestCollection = client.db('BloodDonate').collection('donationRequest')
         const testimonialsCollection = client.db('BloodDonate').collection('Testimonials')
+        const blogCollection = client.db('BloodDonate').collection('blog')
 
 
         //verify admin
@@ -128,21 +120,6 @@ async function run() {
                 admin = user?.role === 'admin'
             }
             res.send({ admin })
-        })
-        //check admin and volunteer role
-        app.get('/users/adminorVolun/:email', verifyToken, async (req, res) => {
-            const email = req.params.email
-            if (email !== req.decoded.email) {
-                return res.status(403).send({ message: 'forbidden access' })
-            }
-            const query = { email: email }
-            const user = await usersCollection.findOne(query)
-
-            let adminOrVolun = false
-            if (user) {
-                adminOrVolun = user?.role === 'admin' || user?.role === 'volunteer'
-            }
-            res.send({ adminOrVolun })
         })
 
         app.get('/districts', async (req, res) => {
@@ -277,6 +254,7 @@ async function run() {
         })
 
 
+
         //my
         app.get('/create-donation-request/:requesterEmail', async (req, res) => {
             const requesterEmail = req.params.requesterEmail;
@@ -400,18 +378,37 @@ async function run() {
 
         //search all blood donation filter search
         app.get('/search-blood-donation-all', async (req, res) => {
-
-
             const category = req.query;
-
-
             const query = { bloodGroup: category.bloodGroup, district: category.district, upazila: category.upazila }
-
-
-
-
             const result = await usersCollection.find(query).toArray()
             res.send(result)
+        })
+
+        //blog related api
+        app.get('/addblog', async (req, res) => {
+            const result = await blogCollection.find().toArray()
+            res.send(result)
+        })
+        app.post('/addblog', async (req, res) => {
+            const blog = req.body
+            const result = await blogCollection.insertOne(blog)
+            res.send(result)
+        })
+
+        app.post('/create-payment-intent', async (req, res) => {
+            const { price } = req.body
+            const amount = parseInt(price * 100)
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: amount,
+                currency: "usd",
+                //TODO:
+                payment_method_types: ['card']
+            })
+
+            res.send({
+                clientSecret: paymentIntent.client_secret
+            })
+
         })
 
         // Send a ping to confirm a successful connection
