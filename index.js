@@ -162,7 +162,7 @@ async function run() {
         const id = {
           _id: new ObjectId(getId),
         };
-        const result = await dailyIncomeCollection.deleteOne(id);
+        const result = await dailyExpenseCollection.deleteOne(id);
         res.send(result);
       } catch (error) {
         res.status(500).send({ message: "Error deleting document", error });
