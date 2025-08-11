@@ -37,11 +37,43 @@ async function run() {
     const dailyExpenseCollection = client
       .db("StyleMan")
       .collection("dailyExpense");
-
     app.get("/dailyIncome", async (req, res) => {
       try {
+        const { filterBy, month, year } = req.query;
+
         const dailyIncomes = await dailyIncomeCollection.find().toArray();
-        res.status(200).send(dailyIncomes);
+
+        // Date parsing helper (যেহেতু DB থেকে date স্ট্রিং আসে)
+        const parseDate = (dateStr) => new Date(dateStr);
+
+        let filtered = dailyIncomes;
+
+        if (filterBy === "today") {
+          const today = new Date();
+          filtered = dailyIncomes.filter((item) => {
+            const dateObj = parseDate(item.date);
+            return (
+              dateObj.getDate() === today.getDate() &&
+              dateObj.getMonth() === today.getMonth() &&
+              dateObj.getFullYear() === today.getFullYear()
+            );
+          });
+        } else if (filterBy === "month" && month && year) {
+          filtered = dailyIncomes.filter((item) => {
+            const dateObj = parseDate(item.date);
+            return (
+              dateObj.getMonth() + 1 === parseInt(month, 10) &&
+              dateObj.getFullYear() === parseInt(year, 10)
+            );
+          });
+        } else if (filterBy === "year" && year) {
+          filtered = dailyIncomes.filter((item) => {
+            const dateObj = parseDate(item.date);
+            return dateObj.getFullYear() === parseInt(year, 10);
+          });
+        }
+
+        res.status(200).send(filtered);
       } catch (error) {
         console.error(error);
         res.status(500).send({ message: "Server error" });
@@ -54,6 +86,65 @@ async function run() {
       res.send(result);
     });
 
+    const { ObjectId } = require("mongodb");
+
+    app.delete("/dailyIncome/:id", async (req, res) => {
+      try {
+        const getId = req.params.id;
+        const id = {
+          _id: new ObjectId(getId),
+        };
+        const result = await dailyIncomeCollection.deleteOne(id);
+        res.send(result);
+      } catch (error) {
+        res.status(500).send({ message: "Error deleting document", error });
+      }
+    });
+
+    //   Expense
+    app.get("/dailyExpense", async (req, res) => {
+      try {
+        const { filterBy, month, year } = req.query;
+
+        const dailyExpenses = await dailyExpenseCollection.find().toArray();
+
+        // Parse date string from DB
+        const parseDate = (dateStr) => new Date(dateStr);
+
+        let filtered = dailyExpenses;
+
+        if (filterBy === "today") {
+          const today = new Date();
+          filtered = dailyExpenses.filter((item) => {
+            const dateObj = parseDate(item.date);
+            return (
+              dateObj.getDate() === today.getDate() &&
+              dateObj.getMonth() === today.getMonth() &&
+              dateObj.getFullYear() === today.getFullYear()
+            );
+          });
+        } else if (filterBy === "month" && month && year) {
+          filtered = dailyExpenses.filter((item) => {
+            const dateObj = parseDate(item.date);
+            return (
+              dateObj.getMonth() + 1 === parseInt(month, 10) &&
+              dateObj.getFullYear() === parseInt(year, 10)
+            );
+          });
+        } else if (filterBy === "year" && year) {
+          filtered = dailyExpenses.filter((item) => {
+            const dateObj = parseDate(item.date);
+            return dateObj.getFullYear() === parseInt(year, 10);
+          });
+        }
+
+        res.status(200).send(filtered);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Server error" });
+      }
+    });
+
     app.post("/dailyExpense", async (req, res) => {
       try {
         const dailyExpense = req.body;
@@ -62,6 +153,19 @@ async function run() {
       } catch (error) {
         console.error("Error inserting daily expense:", error);
         res.status(500).send({ message: "Internal server error" });
+      }
+    });
+
+    app.delete("/dailyExpense/:id", async (req, res) => {
+      try {
+        const getId = req.params.id;
+        const id = {
+          _id: new ObjectId(getId),
+        };
+        const result = await dailyIncomeCollection.deleteOne(id);
+        res.send(result);
+      } catch (error) {
+        res.status(500).send({ message: "Error deleting document", error });
       }
     });
 
@@ -78,7 +182,7 @@ async function run() {
 run().catch(console.dir);
 
 app.get("/", (req, res) => {
-  res.send("Blood Donate Server is Working");
+  res.send("StyleMan Server is Working");
 });
 
 app.listen(port, () => {
