@@ -80,6 +80,35 @@ async function run() {
       }
     });
 
+    app.get("/todayIncome", async (req, res) => {
+      try {
+        const incomes = await dailyIncomeCollection.find().toArray();
+
+        const today = new Date();
+
+        // আজকের তারিখ ফিল্টার
+        const todayIncomes = incomes.filter((item) => {
+          const dateObj = new Date(item.date);
+          return (
+            dateObj.getDate() === today.getDate() &&
+            dateObj.getMonth() === today.getMonth() &&
+            dateObj.getFullYear() === today.getFullYear()
+          );
+        });
+
+        // মোট আয় বের করা
+        const totalIncome = todayIncomes.reduce((sum, item) => {
+          const price = Number(item.offerPrice) || Number(item.price) || 0;
+          return sum + price;
+        }, 0);
+
+        res.send({ totalIncome });
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Server error" });
+      }
+    });
+
     app.post("/dailyIncome", async (req, res) => {
       const dailyIncome = req.body;
       const result = await dailyIncomeCollection.insertOne(dailyIncome);
@@ -139,6 +168,35 @@ async function run() {
         }
 
         res.status(200).send(filtered);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Server error" });
+      }
+    });
+
+    app.get("/todayExpense", async (req, res) => {
+      try {
+        const expenses = await dailyExpenseCollection.find().toArray();
+
+        const today = new Date();
+
+        // আজকের তারিখ ফিল্টার
+        const todayExpense = expenses.filter((item) => {
+          const dateObj = new Date(item.date);
+          return (
+            dateObj.getDate() === today.getDate() &&
+            dateObj.getMonth() === today.getMonth() &&
+            dateObj.getFullYear() === today.getFullYear()
+          );
+        });
+
+        // মোট আয় বের করা
+        const totalExpenses = todayExpense.reduce((sum, item) => {
+          const price = Number(item.offerPrice) || Number(item.price) || 0;
+          return sum + price;
+        }, 0);
+
+        res.send({ totalExpenses });
       } catch (error) {
         console.error(error);
         res.status(500).send({ message: "Server error" });
