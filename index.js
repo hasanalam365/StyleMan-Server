@@ -235,6 +235,63 @@ async function run() {
       }
     });
 
+    // dashboard page recent data show
+    app.get("/recentData", async (req, res) => {
+      try {
+        // income থেকে শেষ ৪টা ডকুমেন্ট (time descending ধরে)
+        const incomeData = await dailyIncomeCollection
+          .find()
+          .sort({ time: -1 }) // time descending
+          .limit(2)
+          .toArray();
+
+        // expense থেকে শেষ ৪টা ডকুমেন্ট (time descending ধরে)
+        const expenseData = await dailyExpenseCollection
+          .find()
+          .sort({ time: -1 })
+          .limit(2)
+          .toArray();
+
+        // income ও expense data একত্রিত করলাম
+        const combinedData = [...incomeData, ...expenseData];
+
+        // এখন combinedData কে আবার time অনুযায়ী descending সাজাবো
+        combinedData.sort((a, b) => {
+          // তোমার data তে time "০৯:৪১ PM" এরকম বাংলা সংখ্যা+AM/PM ফরম্যাট আছে
+          // তাই আগে time কে parse করে ইংরেজি 24h format এ নিয়ে আসতে হবে।
+
+          // helper function to convert "০৯:৪১ PM" to Date object or minutes
+          const parseTime = (timeStr) => {
+            // বাংলায় সময় আছে, তাই বাংলা সংখ্যা ইংরেজিতে convert করতে হবে
+            const bnNums = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
+            let enTimeStr = "";
+            for (let ch of timeStr) {
+              const idx = bnNums.indexOf(ch);
+              if (idx !== -1) enTimeStr += idx;
+              else enTimeStr += ch;
+            }
+            // এখন enTimeStr এর মত হবে "09:41 PM"
+            // Parse hour and minute + AM/PM
+            let [time, meridian] = enTimeStr.split(" ");
+            let [hour, minute] = time.split(":").map(Number);
+            if (meridian === "PM" && hour !== 12) hour += 12;
+            if (meridian === "AM" && hour === 12) hour = 0;
+            return hour * 60 + minute; // convert to minutes for sorting
+          };
+
+          return parseTime(b.time) - parseTime(a.time);
+        });
+
+        // combinedData থেকে প্রথম ৪টা নিয়ে রিটার্ন করবো (latest ৪টা)
+        const latest4 = combinedData.slice(0, 4);
+
+        res.json(latest4);
+      } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error" });
+      }
+    });
+
     // Send a ping to confirm a successful connection
     // await client.db("admin").command({ ping: 1 });
     console.log(
