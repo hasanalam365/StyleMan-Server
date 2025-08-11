@@ -38,6 +38,16 @@ async function run() {
       .db("StyleMan")
       .collection("dailyExpense");
 
+    app.get("/dailyIncome", async (req, res) => {
+      try {
+        const dailyIncomes = await dailyIncomeCollection.find().toArray();
+        res.status(200).send(dailyIncomes);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Server error" });
+      }
+    });
+
     app.post("/dailyIncome", async (req, res) => {
       const dailyIncome = req.body;
       const result = await dailyIncomeCollection.insertOne(dailyIncome);
