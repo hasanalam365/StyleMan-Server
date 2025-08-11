@@ -37,13 +37,18 @@ async function run() {
     const dailyExpenseCollection = client
       .db("StyleMan")
       .collection("dailyExpense");
+
+    //monthly income page api
     app.get("/dailyIncome", async (req, res) => {
       try {
         const { filterBy, month, year } = req.query;
 
-        const dailyIncomes = await dailyIncomeCollection.find().toArray();
+        let dailyIncomes = await dailyIncomeCollection
+          .find()
+          .sort({ _id: -1 })
+          .toArray();
 
-        // Date parsing helper (যেহেতু DB থেকে date স্ট্রিং আসে)
+        // Date parsing helper
         const parseDate = (dateStr) => new Date(dateStr);
 
         let filtered = dailyIncomes;
@@ -130,21 +135,24 @@ async function run() {
       }
     });
 
-    //   Expense
+    // Monthly  Expense api
     app.get("/dailyExpense", async (req, res) => {
       try {
         const { filterBy, month, year } = req.query;
 
-        const dailyExpenses = await dailyExpenseCollection.find().toArray();
+        let dailyExpense = await dailyExpenseCollection
+          .find()
+          .sort({ _id: -1 })
+          .toArray();
 
-        // Parse date string from DB
+        // Date parsing helper
         const parseDate = (dateStr) => new Date(dateStr);
 
-        let filtered = dailyExpenses;
+        let filtered = dailyExpense;
 
         if (filterBy === "today") {
           const today = new Date();
-          filtered = dailyExpenses.filter((item) => {
+          filtered = dailyExpense.filter((item) => {
             const dateObj = parseDate(item.date);
             return (
               dateObj.getDate() === today.getDate() &&
@@ -153,7 +161,7 @@ async function run() {
             );
           });
         } else if (filterBy === "month" && month && year) {
-          filtered = dailyExpenses.filter((item) => {
+          filtered = dailyExpense.filter((item) => {
             const dateObj = parseDate(item.date);
             return (
               dateObj.getMonth() + 1 === parseInt(month, 10) &&
@@ -161,7 +169,7 @@ async function run() {
             );
           });
         } else if (filterBy === "year" && year) {
-          filtered = dailyExpenses.filter((item) => {
+          filtered = dailyExpense.filter((item) => {
             const dateObj = parseDate(item.date);
             return dateObj.getFullYear() === parseInt(year, 10);
           });
