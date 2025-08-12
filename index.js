@@ -15,7 +15,7 @@ app.use(
   })
 );
 
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.qvnsypp.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ukfmznj.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -232,6 +232,99 @@ async function run() {
         res.send(result);
       } catch (error) {
         res.status(500).send({ message: "Error deleting document", error });
+      }
+    });
+
+    //   dashboard chart income/expense api
+    app.get("/monthlyIncome", async (req, res) => {
+      try {
+        const getIncome = await dailyIncomeCollection.find().toArray();
+
+        const monthlyIncomeMap = {};
+
+        const currentYear = new Date().getFullYear(); // আজকের বছর (যেমন 2025)
+
+        getIncome.forEach((item) => {
+          const dateStr = item.date;
+          const parts = dateStr.split(", ");
+          if (parts.length < 3) return;
+
+          const monthDay = parts[1];
+          const yearStr = parts[2];
+
+          const fullDateStr = monthDay + " " + yearStr;
+          const dateObj = new Date(fullDateStr);
+          if (isNaN(dateObj)) return;
+
+          // শুধু বর্তমান বছর (currentYear) এর data গুলো বিবেচনা করবো
+          if (dateObj.getFullYear() !== currentYear) return;
+
+          const monthKey = `${dateObj.getFullYear()}-${String(
+            dateObj.getMonth() + 1
+          ).padStart(2, "0")}`;
+
+          const incomeValue = item.offerPrice
+            ? Number(item.offerPrice)
+            : Number(item.price);
+
+          if (!monthlyIncomeMap[monthKey]) {
+            monthlyIncomeMap[monthKey] = 0;
+          }
+          monthlyIncomeMap[monthKey] += incomeValue;
+        });
+
+        res.json({ success: true, monthlyIncome: monthlyIncomeMap });
+      } catch (error) {
+        console.error(error);
+        res
+          .status(500)
+          .json({ success: false, message: "Internal server error" });
+      }
+    });
+
+    app.get("/monthlyExpense", async (req, res) => {
+      try {
+        const getExpense = await dailyExpenseCollection.find().toArray();
+
+        const monthlyExpenseMap = {};
+
+        const currentYear = new Date().getFullYear(); // আজকের বছর (যেমন 2025)
+
+        getExpense.forEach((item) => {
+          const dateStr = item.date;
+          const parts = dateStr.split(", ");
+          if (parts.length < 3) return;
+
+          const monthDay = parts[1];
+          const yearStr = parts[2];
+
+          const fullDateStr = monthDay + " " + yearStr;
+          const dateObj = new Date(fullDateStr);
+          if (isNaN(dateObj)) return;
+
+          // শুধু বর্তমান বছর (currentYear) এর data গুলো বিবেচনা করবো
+          if (dateObj.getFullYear() !== currentYear) return;
+
+          const monthKey = `${dateObj.getFullYear()}-${String(
+            dateObj.getMonth() + 1
+          ).padStart(2, "0")}`;
+
+          const expenseValue = item.offerPrice
+            ? Number(item.offerPrice)
+            : Number(item.price);
+
+          if (!monthlyExpenseMap[monthKey]) {
+            monthlyExpenseMap[monthKey] = 0;
+          }
+          monthlyExpenseMap[monthKey] += expenseValue;
+        });
+
+        res.json({ success: true, mothlyExpense: monthlyExpenseMap });
+      } catch (error) {
+        console.error(error);
+        res
+          .status(500)
+          .json({ success: false, message: "Internal server error" });
       }
     });
 
