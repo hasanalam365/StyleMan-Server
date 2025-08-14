@@ -11,7 +11,7 @@ app.use(express.json());
 // app.use(cors(corsOptions))
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://reddrop-bd.web.app"],
+    origin: ["http://localhost:5173", "https://styleman.vercel.app"],
   })
 );
 
@@ -37,6 +37,7 @@ async function run() {
     const dailyExpenseCollection = client
       .db("StyleMan")
       .collection("dailyExpense");
+    const categoryCollection = client.db("StyleMan").collection("category");
 
     //monthly income page api
     app.get("/dailyIncome", async (req, res) => {
@@ -120,7 +121,58 @@ async function run() {
       res.send(result);
     });
 
-    const { ObjectId } = require("mongodb");
+    // post category
+    app.post("/category", async (req, res) => {
+      const data = req.body;
+      const result = await categoryCollection.insertOne(data);
+      res.send(result);
+    });
+
+    app.put("/income-data-update/:id", async (req, res) => {
+      const id = req.params.id;
+      const updatedDoc = {
+        $set: {
+          title: req.body.title,
+          category: req.body.category,
+          price: req.body.price,
+          offerPrice: req.body.offerPrice,
+          customerName: req.body.customerName,
+          phoneNumber: req.body.phoneNumber,
+          salesmanName: req.body.salesmanName,
+          date: req.body.date,
+          time: req.body.time,
+        },
+      };
+      const result = await dailyIncomeCollection.updateOne(
+        { _id: new ObjectId(id) },
+        updatedDoc
+      );
+      res.send(result);
+    });
+
+    app.get("/income-data/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+
+      const result = await dailyIncomeCollection.findOne(query);
+      res.send(result);
+    });
+
+    // update category IN updatedIncome page
+    app.put("/update-category/:id", async (req, res) => {
+      const id = req.params.id;
+      const updatedDoc = {
+        $set: {
+          categoryName: req.body.category,
+          price: req.body.price,
+        },
+      };
+      const result = await categoryCollection.updateOne(
+        { categoryId: id },
+        updatedDoc
+      );
+      res.send(result);
+    });
 
     app.delete("/dailyIncome/:id", async (req, res) => {
       try {
@@ -328,60 +380,34 @@ async function run() {
       }
     });
 
-    // dashboard page recent data show
-    app.get("/recentData", async (req, res) => {
+    // dashboard recent data api
+    app.get("/recentIncomeData", async (req, res) => {
       try {
-        // income থেকে শেষ ৪টা ডকুমেন্ট (time descending ধরে)
-        const incomeData = await dailyIncomeCollection
+        const getData = await dailyIncomeCollection
           .find()
-          .sort({ time: -1 }) // time descending
-          .limit(2)
+          .sort({ _id: -1 })
+          .limit(3)
           .toArray();
 
-        // expense থেকে শেষ ৪টা ডকুমেন্ট (time descending ধরে)
-        const expenseData = await dailyExpenseCollection
-          .find()
-          .sort({ time: -1 })
-          .limit(2)
-          .toArray();
-
-        // income ও expense data একত্রিত করলাম
-        const combinedData = [...incomeData, ...expenseData];
-
-        // এখন combinedData কে আবার time অনুযায়ী descending সাজাবো
-        combinedData.sort((a, b) => {
-          // তোমার data তে time "০৯:৪১ PM" এরকম বাংলা সংখ্যা+AM/PM ফরম্যাট আছে
-          // তাই আগে time কে parse করে ইংরেজি 24h format এ নিয়ে আসতে হবে।
-
-          // helper function to convert "০৯:৪১ PM" to Date object or minutes
-          const parseTime = (timeStr) => {
-            // বাংলায় সময় আছে, তাই বাংলা সংখ্যা ইংরেজিতে convert করতে হবে
-            const bnNums = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
-            let enTimeStr = "";
-            for (let ch of timeStr) {
-              const idx = bnNums.indexOf(ch);
-              if (idx !== -1) enTimeStr += idx;
-              else enTimeStr += ch;
-            }
-            // এখন enTimeStr এর মত হবে "09:41 PM"
-            // Parse hour and minute + AM/PM
-            let [time, meridian] = enTimeStr.split(" ");
-            let [hour, minute] = time.split(":").map(Number);
-            if (meridian === "PM" && hour !== 12) hour += 12;
-            if (meridian === "AM" && hour === 12) hour = 0;
-            return hour * 60 + minute; // convert to minutes for sorting
-          };
-
-          return parseTime(b.time) - parseTime(a.time);
-        });
-
-        // combinedData থেকে প্রথম ৪টা নিয়ে রিটার্ন করবো (latest ৪টা)
-        const latest4 = combinedData.slice(0, 4);
-
-        res.json(latest4);
+        res.send(getData);
       } catch (error) {
         console.error(error);
-        res.status(500).json({ message: "Server error" });
+        res.status(500).send({ message: "Server error" });
+      }
+    });
+
+    app.get("/recentExpenseData", async (req, res) => {
+      try {
+        const getData = await dailyExpenseCollection
+          .find()
+          .sort({ _id: -1 })
+          .limit(3)
+          .toArray();
+
+        res.send(getData);
+      } catch (error) {
+        console.error(error);
+        res.status(500).send({ message: "Server error" });
       }
     });
 
