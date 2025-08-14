@@ -433,6 +433,30 @@ async function run() {
       }
     });
 
+    app.get("/category", async (req, res) => {
+      const now = new Date();
+      const currentMonth = now.toLocaleString("en-US", { month: "long" }); // "August"
+      const currentYear = now.getFullYear(); // 2025
+
+      // MongoDB থেকে ডেটা ফিল্টার
+      const categories = await categoryCollection
+        .find({
+          date: { $regex: `${currentMonth}`, $options: "i" }, // "August" match করবে
+        })
+        .toArray();
+
+      // যদি year match করাও লাগে:
+      const filtered = categories.filter((item) => {
+        const itemDate = new Date(item.date);
+        return (
+          itemDate.getMonth() === now.getMonth() &&
+          itemDate.getFullYear() === now.getFullYear()
+        );
+      });
+
+      res.send(filtered);
+    });
+
     // Send a ping to confirm a successful connection
     // await client.db("admin").command({ ping: 1 });
     console.log(
