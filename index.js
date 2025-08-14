@@ -128,6 +128,21 @@ async function run() {
       res.send(result);
     });
 
+    app.put("/expense-data-update/:id", async (req, res) => {
+      const id = req.params.id;
+      const updatedDoc = {
+        $set: {
+          title: req.body.title,
+          price: req.body.price,
+          salesmanName: req.body.salesmanName,
+        },
+      };
+      const result = await dailyExpenseCollection.updateOne(
+        { _id: new ObjectId(id) },
+        updatedDoc
+      );
+      res.send(result);
+    });
     app.put("/income-data-update/:id", async (req, res) => {
       const id = req.params.id;
       const updatedDoc = {
@@ -139,8 +154,6 @@ async function run() {
           customerName: req.body.customerName,
           phoneNumber: req.body.phoneNumber,
           salesmanName: req.body.salesmanName,
-          date: req.body.date,
-          time: req.body.time,
         },
       };
       const result = await dailyIncomeCollection.updateOne(
@@ -155,6 +168,15 @@ async function run() {
       const query = { _id: new ObjectId(id) };
 
       const result = await dailyIncomeCollection.findOne(query);
+      res.send(result);
+    });
+
+    // expense data get from expense update
+    app.get("/expense-data/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+
+      const result = await dailyExpenseCollection.findOne(query);
       res.send(result);
     });
 
