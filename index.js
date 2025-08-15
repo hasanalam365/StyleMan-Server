@@ -461,6 +461,11 @@ async function run() {
     });
 
     // বকেয়া ইনকাম
+    app.get("/unPaidIncome", async (req, res) => {
+      const result = await unPaidIncomeCollection.find().toArray();
+      res.send(result);
+    });
+
     app.post("/unPaidIncome", async (req, res) => {
       const unPaidData = req.body;
       const result = await unPaidIncomeCollection.insertOne(unPaidData);
