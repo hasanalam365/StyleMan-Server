@@ -38,6 +38,9 @@ async function run() {
       .db("StyleMan")
       .collection("dailyExpense");
     const categoryCollection = client.db("StyleMan").collection("category");
+    const unPaidIncomeCollection = client
+      .db("StyleMan")
+      .collection("unPaidIncome");
 
     //monthly income page api
     app.get("/dailyIncome", async (req, res) => {
@@ -455,6 +458,13 @@ async function run() {
       });
 
       res.send(filtered);
+    });
+
+    // বকেয়া ইনকাম
+    app.post("/unPaidIncome", async (req, res) => {
+      const unPaidData = req.body;
+      const result = await unPaidIncomeCollection.insertOne(unPaidData);
+      res.send(result);
     });
 
     // Send a ping to confirm a successful connection
