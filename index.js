@@ -415,9 +415,7 @@ async function run() {
             dateObj.getMonth() + 1
           ).padStart(2, "0")}`;
 
-          const expenseValue = item.offerPrice
-            ? Number(item.offerPrice)
-            : Number(item.price);
+          const expenseValue = Number(item.price);
 
           if (!monthlyExpenseMap[monthKey]) {
             monthlyExpenseMap[monthKey] = 0;
@@ -425,7 +423,7 @@ async function run() {
           monthlyExpenseMap[monthKey] += expenseValue;
         });
 
-        res.json({ success: true, mothlyExpense: monthlyExpenseMap });
+        res.json({ success: true, monthlyExpense: monthlyExpenseMap });
       } catch (error) {
         console.error(error);
         res
