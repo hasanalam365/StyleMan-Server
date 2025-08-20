@@ -489,7 +489,10 @@ async function run() {
 
     // বকেয়া ইনকাম
     app.get("/unPaidIncome", async (req, res) => {
-      const result = await unPaidIncomeCollection.find().toArray();
+      const result = await unPaidIncomeCollection
+        .find()
+        .sort({ _id: -1 })
+        .toArray();
       res.send(result);
     });
 
@@ -499,6 +502,43 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/unpaid-Income-Paid/:id", async (req, res) => {
+      const id = req.params.id;
+
+      const result = await unPaidIncomeCollection.findOne({
+        _id: new ObjectId(id),
+      });
+      res.send(result);
+    });
+
+    app.delete("/unpaid-income/:id", async (req, res) => {
+      const id = req.params.id;
+      const result = await unPaidIncomeCollection.deleteOne({
+        _id: new ObjectId(id),
+      });
+      res.send(result);
+    });
+    // Update unpaid income to paid
+
+    app.put("/unpaid-Income-Paid/:id", async (req, res) => {
+      const id = req.params.id;
+      const updatedDoc = {
+        $set: {
+          title: req.body.title,
+          category: req.body.category,
+          paidTK: req.body.paidTK,
+          unPaidTK: req.body.unPaidTK,
+          customerName: req.body.customerName,
+          phoneNumber: req.body.phoneNumber,
+          salesmanName: req.body.salesmanName,
+        },
+      };
+      const result = await unPaidIncomeCollection.updateOne(
+        { _id: new ObjectId(id) },
+        updatedDoc
+      );
+      res.send(result);
+    });
     // Send a ping to confirm a successful connection
     // await client.db("admin").command({ ping: 1 });
     console.log(
