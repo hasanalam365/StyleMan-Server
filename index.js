@@ -136,7 +136,7 @@ async function run() {
 
         // মোট আয় বের করা
         const totalIncome = todayIncomes.reduce((sum, item) => {
-          const price = Number(item.offerPrice) || Number(item.price) || 0;
+          const price = Number(item.totalPrice) || 0;
           return sum + price;
         }, 0);
 
@@ -181,8 +181,8 @@ async function run() {
         $set: {
           title: req.body.title,
           categories: req.body.categories,
-          price: req.body.price,
-          offerPrice: req.body.offerPrice,
+          totalPrice: req.body.totalPrice,
+
           customerName: req.body.customerName,
           phoneNumber: req.body.phoneNumber,
           salesmanName: req.body.salesmanName,
