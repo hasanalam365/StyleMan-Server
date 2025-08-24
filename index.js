@@ -180,7 +180,7 @@ async function run() {
       const updatedDoc = {
         $set: {
           title: req.body.title,
-          category: req.body.category,
+          categories: req.body.categories,
           price: req.body.price,
           offerPrice: req.body.offerPrice,
           customerName: req.body.customerName,
